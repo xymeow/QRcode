@@ -1,2 +1,3 @@
-# QRcode
-a course project
+#QRcode
+
+my course project

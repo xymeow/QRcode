@@ -40,6 +40,8 @@ static NSString *bgImg_img = @"image.bundle/scanBackground";
 static NSString *Line_img = @"image.bundle/scanLine";
 static NSString *turn_on = @"image.bundle/turn_on";
 static NSString *turn_off = @"image.bundle/turn_off";
+static NSString *QR=@"image.bundle/QR";
+static NSString *myPhoto=@"image.bundle/myPhoto";
 static NSString *ringPath = @"image.bundle/ring";
 static NSString *ringType = @"wav";
 

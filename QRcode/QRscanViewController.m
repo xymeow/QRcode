@@ -48,13 +48,19 @@
 @property (strong, nonatomic) UIButton *lamp;
 
 /**
+ *用于打开制作二维码界面
+ */
+@property (strong,nonatomic)UIButton *showQR;
+
+/**
+ *用于打开相册
+ */
+@property (strong ,nonatomic)UIButton *photo;
+
+/**
  *用于记录scrollLine的上下循环状态
  */
 @property (assign, nonatomic) BOOL up;
-
-@property (strong,nonatomic)UIButton *showQR;
-
-@property (strong ,nonatomic)UIButton *photo;
 
 #pragma mark -------
 
@@ -157,11 +163,11 @@
     _showQR=[[UIButton alloc]initWithFrame:CGRectMake(kshowQRX, kshowQRY, kshowQRWidth, kshowQRWidth)];
     _showQR.alpha=kBgAlpha;
     [_showQR.layer setMasksToBounds:YES];
-    [_showQR.layer setCornerRadius:kLampWidth/2];
+    [_showQR.layer setCornerRadius:kshowQRWidth/2];
     [_showQR.layer setBorderWidth:2.0];
     [_showQR.layer setBorderColor:[[UIColor whiteColor] CGColor]];
     _showQR.backgroundColor = [UIColor whiteColor];
-    [_showQR setImage:[UIImage imageNamed:turn_off] forState:UIControlStateNormal];
+    [_showQR setImage:[UIImage imageNamed:QR] forState:UIControlStateNormal];
     [_showQR addTarget:self action:@selector(touchshowQR:) forControlEvents:UIControlEventTouchUpInside];
     return _showQR;
 }
@@ -170,11 +176,11 @@
     _photo=[[UIButton alloc]initWithFrame:CGRectMake(kphotoX, kphotoY, kphotoWidth, kphotoWidth)];
     _photo.alpha=kBgAlpha;
     [_photo.layer setMasksToBounds:YES];
-    [_photo.layer setCornerRadius:kLampWidth/2];
+    [_photo.layer setCornerRadius:kphotoWidth/2];
     [_photo.layer setBorderWidth:2.0];
     [_photo.layer setBorderColor:[[UIColor whiteColor] CGColor]];
     _photo.backgroundColor = [UIColor whiteColor];
-    [_photo setImage:[UIImage imageNamed:turn_off] forState:UIControlStateNormal];
+    [_photo setImage:[UIImage imageNamed:myPhoto] forState:UIControlStateNormal];
     [_photo addTarget:self action:@selector(openPhoto) forControlEvents:UIControlEventTouchUpInside];
     return _photo;
 }
@@ -276,7 +282,7 @@
     [SystemFunctions openLight:btn.selected];
 }
 
-#pragma mark - 切换 navigation
+#pragma mark - 切换到二维码生成界面
 -(void)touchshowQR:(id)sender{
     UIStoryboard *story = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     ShowQRViewController *show = [story instantiateViewControllerWithIdentifier:@"Show"];
@@ -318,6 +324,8 @@
     // 2.2利用探测器探测数据
     NSArray *feature = [detector featuresInImage:ciImage];
     
+    
+    [picker dismissViewControllerAnimated:YES completion:nil];
     // 2.3取出探测到的数据
     for (CIQRCodeFeature *result in feature) {
         NSString *urlStr = result.messageString;
@@ -331,8 +339,6 @@
         }];
     }
     
-    [picker dismissViewControllerAnimated:YES completion:nil];
-    
     if (feature.count == 0) {
         [self showAlertWithTitle:@"扫描结果" Message:@"没有扫描到有效二维码" OptionalAction:@[@"确认"]];
     }
@@ -345,15 +351,17 @@
     if (metadataObjects.count > 0) {
         [SystemFunctions openShake:YES Sound:YES];
         // 1.停止扫描
-        //        [self.session stopRunning];
+            [self.session stopRunning];
         // 2.停止冲击波
-        //        [self.link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-        
+            [self.link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
         // 3.取出扫描到得数据
         AVMetadataMachineReadableCodeObject *obj = [metadataObjects lastObject];
         if (obj) {
             
             [SystemFunctions showInSafariWithURLMessage:[obj stringValue] Success:^(NSString *token) {
+                
+                [self.session startRunning];
+                [self.link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
                 
             } Failure:^(NSError *error) {
                 [self showAlertWithTitle:@"该信息无法跳转，详细信息为：" Message:[obj stringValue] OptionalAction:@[@"确定"]];
@@ -366,7 +374,10 @@
 - (void)showAlertWithTitle:(NSString *)title Message:(NSString *)message OptionalAction:(NSArray *)actions {
     
     UIAlertController *alertCtrl = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-    [alertCtrl addAction:[UIAlertAction actionWithTitle:actions.firstObject style:UIAlertActionStyleCancel handler:nil]];
+    [alertCtrl addAction:[UIAlertAction actionWithTitle:actions.firstObject style:UIAlertActionStyleCancel handler:^(UIAlertAction *action){
+        [self.session startRunning];
+        [self.link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    }]];
     [self presentViewController:alertCtrl animated:YES completion:nil];
 }
 
